@@ -1,1 +1,0 @@
-# Marked0/1, Good/Bad Color

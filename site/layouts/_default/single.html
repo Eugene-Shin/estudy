@@ -1,0 +1,45 @@
+{{ define "main" -}}
+{{- $title := partial "title.html" . -}}
+<main id="main" class="main">
+  <article lang="{{ partial "t.html" "htmlLang" }}">
+    <header class="article-header">
+      <nav class="crumbs" aria-label="{{ partial "t.html" "path" }}">
+        <a href="{{ site.Home.RelPermalink }}">rlaope</a>
+        {{- range .Ancestors.Reverse }}{{ if not .IsHome }}<span class="sep">/</span><a href="{{ .RelPermalink }}">{{ partial "secname.html" . }}</a>{{ end }}{{ end -}}
+      </nav>
+      <h1 class="article-title">{{ $title }}</h1>
+      <p class="meta">
+        <span>{{ .WordCount | lang.FormatNumberCustom 0 }} 단어</span><span class="sep">·</span><span>{{ .ReadingTime }} 분</span>
+        {{- with .File }}<span class="sep">·</span><a href="{{ site.Params.repoURL }}/blob/{{ site.Params.repoBranch }}/{{ if ne .Path "README.md" }}{{ with site.Params.contentPrefix }}{{ . }}/{{ end }}{{ end }}{{ .Path }}" rel="noopener">원문(.md)</a>{{ end }}
+      </p>
+    </header>
+    <div class="prose">
+      {{- /* 노트가 이미 가진 첫 H1 은 제목으로 보여주므로 본문에서 제거 */ -}}
+      {{- $c := .Content -}}
+      {{- if $title -}}
+        {{- $c = replaceRE `(?s)\A\s*<h1[^>]*>.*?</h1>` "" $c 1 -}}
+      {{- end -}}
+      {{- $c = replaceRE `<table>` `<div class="table-wrap"><table>` $c -}}
+      {{- $c = replaceRE `</table>` `</table></div>` $c -}}
+      {{ $c | safeHTML }}
+    </div>
+    <footer class="article-footer">
+      {{- with .File }}<span><code>{{ .Path }}</code></span>{{ end }}
+    </footer>
+    {{- $sec := .FirstSection -}}
+    {{- $pages := $sec.RegularPagesRecursive.ByTitle -}}
+    {{- $prev := "" }}{{ $next := "" }}{{ $found := false -}}
+    {{- range $pages -}}
+      {{- if $found }}{{ if not $next }}{{ $next = . }}{{ end }}{{ end -}}
+      {{- if eq . $ }}{{ $found = true }}{{ end -}}
+      {{- if not $found }}{{ $prev = . }}{{ end -}}
+    {{- end -}}
+    {{- if or $prev $next -}}
+    <nav class="pager" aria-label="{{ partial "t.html" "pager" }}">
+      {{ with $prev }}<a class="prev" href="{{ .RelPermalink }}" rel="prev"><span class="dir">{{ partial "t.html" "prev" }}</span>{{ partial "title.html" . }}</a>{{ end }}
+      {{ with $next }}<a class="next" href="{{ .RelPermalink }}" rel="next"><span class="dir">{{ partial "t.html" "next" }}</span>{{ partial "title.html" . }}</a>{{ end }}
+    </nav>
+    {{- end -}}
+  </article>
+</main>
+{{- end }}
